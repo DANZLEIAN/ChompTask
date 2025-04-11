@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>ChompTask - Underwater</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="bubbles"></div>
+    <div class="container">
+        <h1>ChompTask</h1>
+        <div class="input-group">
+            <input type="text" id="taskInput" placeholder="Add a new task...">
+            <button id="addTaskBtn" class="plus-btn"><i class="fas fa-plus"></i></button>
+        </div>
+        
+        <div class="tabs">
+            <button class="tab-button active" data-tab="ongoing">Ongoing</button>
+            <button class="tab-button" data-tab="completed">Completed</button>
+        </div>
+        
+        <div class="tab-content active" id="ongoing-tab">
+            <ul id="ongoingTasks" class="task-list"></ul>
+        </div>
+        
+        <div class="tab-content" id="completed-tab">
+            <div class="completed-actions">
+                <button id="deleteAllCompleted" class="delete-all-btn">
+                    <i class="fas fa-trash"></i> Delete All
+                </button>
+            </div>
+            <ul id="completedTasks" class="task-list"></ul>
+        </div>
+    </div>
+    
+    <div id="bite-animation" class="bite-hidden">
+        <img src="/photos/Bite2.webp" alt="Chomp!">
+    </div>
+    <audio id="chompSound" src="/sounds/bite.mp3"></audio>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
