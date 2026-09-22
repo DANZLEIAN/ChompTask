@@ -56,11 +56,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Create task element
+    // Create task element
     function createTaskElement(task) {
         const li = document.createElement('li');
         li.dataset.id = task.id;
         li.innerHTML = `
-            <button class="complete-btn" title="Complete task">✓</button>
             <div class="task-content">
                 <span class="task-text">${task.task_text}</span>
                 <div class="task-dates">
@@ -69,10 +69,13 @@ document.addEventListener('DOMContentLoaded', function() {
                       `<span class="task-date">Updated: ${formatDate(task.updated_at)}</span>` : ''}
                 </div>
             </div>
-            <button class="undo-btn" title="Undo completed task"><i class="fas fa-undo"></i></button>
-            <button class="edit-btn"><i class="fas fa-edit"></i></button>
-            <button class="save-btn"><i class="fas fa-check"></i></button>
-            <button class="delete-btn"><i class="fas fa-times"></i></button>
+            <div class="task-actions">
+                <button class="complete-btn" title="Complete task"><i class="fas fa-check"></i></button>
+                <button class="undo-btn" title="Undo completed task"><i class="fas fa-undo"></i></button>
+                <button class="edit-btn" title="Edit task"><i class="fas fa-edit"></i></button>
+                <button class="save-btn" title="Save changes"><i class="fas fa-check"></i></button>
+                <button class="delete-btn" title="Delete task"><i class="fas fa-times"></i></button>
+            </div>
         `;
         
         const completeBtn = li.querySelector('.complete-btn');
