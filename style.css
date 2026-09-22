@@ -285,30 +285,46 @@ li:hover {
 }
 
 /* ===== Bite Animation ===== */
-#bite-animation {
-    position: absolute;
-    width: 80px;
-    height: 80px;
-    z-index: 10;
-    opacity: 0;
+#bite-container {
+    position: fixed;
+    width: 100px;
+    height: 100px;
+    z-index: 99999;
     pointer-events: none;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    display: block;
 }
 
-#bite-animation img {
+#bite-container.bite-hidden {
+    display: none;
+}
+
+#bite-container img {
     width: 100%;
     height: 100%;
     object-fit: contain;
-    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.7));
+    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.8));
 }
 
 .bite-active {
-    animation: chomp 0.6s forwards;
+    display: block !important;
+    animation: chomp 0.6s forwards ease-out;
 }
 
 @keyframes chomp {
-    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
-    30% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
-    100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.6);
+    }
+    30% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.2);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.9);
+    }
 }
 
 /* ===== Bubbles Background ===== */
@@ -392,7 +408,6 @@ li:hover {
     background: #27ae60;
 }
 
-/* Add placeholder styling for editable tasks */
 .task-text[contenteditable="true"]:empty::before {
     content: "Type new task...";
     color: rgba(255, 255, 255, 0.5);
@@ -413,7 +428,6 @@ li:hover {
         margin-bottom: 15px;
     }
 
-    /* Input area adjustments */
     #taskInput {
         padding: 10px 12px;
         font-size: 14px;
@@ -424,13 +438,11 @@ li:hover {
         font-size: 15px;
     }
 
-    /* Tab adjustments */
     .tab-button {
         padding: 8px 5px;
         font-size: 0.85rem;
     }
 
-    /* Task items */
     li {
         padding: 8px 3px;
     }
@@ -478,7 +490,6 @@ li:hover {
     }
 }
 
-/* Tablet devices (portrait) */
 @media (min-width: 601px) and (max-width: 768px) {
     .container {
         width: 90%;
@@ -490,7 +501,6 @@ li:hover {
     }
 }
 
-/* Large screens */
 @media (min-width: 1200px) {
     .container {
         max-width: 600px;
