@@ -550,3 +550,56 @@ li:hover {
     color: #ffffff;
     transform: scale(1.08);
 }
+
+
+/* Container for action buttons on the right */
+.task-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+}
+
+/* Check / Complete Button (styled like edit/delete) */
+.complete-btn {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    background: #4caf50;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+.complete-btn:hover {
+    background: #388e3c;
+    transform: scale(1.1);
+}
+
+/* Undo Button (styled like edit/delete) */
+.undo-btn {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    background: #2196f3;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+.undo-btn:hover {
+    background: #1976d2;
+    transform: scale(1.1);
+}
