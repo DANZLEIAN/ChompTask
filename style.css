@@ -201,6 +201,20 @@ li:hover {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
+.complete-btn {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid #4fc1ff;
+    background: transparent;
+    margin: 0 10px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    pointer-events: none;
+}
 
 .complete-btn.checked {
     background: #4fc1ff;
