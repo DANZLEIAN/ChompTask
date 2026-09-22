@@ -502,3 +502,23 @@ li:hover {
         max-width: 600px;
     }
 }
+
+.undo-btn {
+    background: transparent;
+    border: none;
+    color: #ff9800;
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 6px;
+    margin-right: 4px;
+    border-radius: 4px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.undo-btn:hover {
+    color: #e65100;
+    transform: scale(1.15);
+}
