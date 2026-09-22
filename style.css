@@ -503,22 +503,50 @@ li:hover {
     }
 }
 
-.undo-btn {
-    background: transparent;
-    border: none;
-    color: #ff9800;
-    cursor: pointer;
-    font-size: 1rem;
-    padding: 6px;
-    margin-right: 4px;
-    border-radius: 4px;
-    display: none;
+/* --- Check / Complete Button --- */
+.complete-btn {
+    display: inline-flex !important;
     align-items: center;
     justify-content: center;
-    transition: transform 0.15s ease, color 0.15s ease;
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    border-radius: 50%;
+    border: 2px solid #4caf50;
+    background: transparent;
+    color: #4caf50;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-right: 12px;
+    transition: all 0.2s ease;
+}
+
+.complete-btn:hover {
+    background: #4caf50;
+    color: #ffffff;
+    transform: scale(1.1);
+}
+
+/* --- Undo Button (in Completed Tab) --- */
+.undo-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: rgba(255, 152, 0, 0.15);
+    border: 1px solid #ff9800;
+    border-radius: 6px;
+    color: #ff9800;
+    font-size: 14px;
+    cursor: pointer;
+    margin-right: 6px;
+    transition: all 0.2s ease;
 }
 
 .undo-btn:hover {
-    color: #e65100;
-    transform: scale(1.15);
+    background: #ff9800;
+    color: #ffffff;
+    transform: scale(1.08);
 }
