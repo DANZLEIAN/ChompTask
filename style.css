@@ -478,6 +478,26 @@ li:hover {
     }
 }
 
+/* Tablet devices (portrait) */
+@media (min-width: 601px) and (max-width: 768px) {
+    .container {
+        width: 90%;
+        max-width: 600px;
+    }
+
+    .task-list {
+        max-height: 55vh;
+    }
+}
+
+/* Large screens */
+@media (min-width: 1200px) {
+    .container {
+        max-width: 600px;
+    }
+}
+
+
 /* Container for action buttons */
 .task-actions {
     display: flex;
@@ -509,21 +529,59 @@ li:hover {
     transform: scale(0.95);
 }
 
-/* Tablet devices (portrait) */
-@media (min-width: 601px) and (max-width: 768px) {
-    .container {
-        width: 90%;
-        max-width: 600px;
-    }
-
-    .task-list {
-        max-height: 55vh;
-    }
+/* Ensure the list item aligns items horizontally */
+li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
 }
 
-/* Large screens */
-@media (min-width: 1200px) {
-    .container {
-        max-width: 600px;
-    }
+/* Base style for the complete button matching edit/delete buttons */
+.complete-btn {
+    background-color: #2ecc71 !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 8px !important;
+    width: 32px !important;
+    height: 32px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    font-size: 14px !important;
+    transition: background-color 0.2s, transform 0.1s !important;
+}
+
+.complete-btn:hover {
+    background-color: #27ae60 !important;
+    transform: scale(1.05);
+}
+
+.complete-btn:active {
+    transform: scale(0.95);
+}
+
+/* Style when used as Undo in the Completed tab */
+.complete-btn.undo-mode {
+    background-color: #3498db !important;
+}
+
+.complete-btn.undo-mode:hover {
+    background-color: #2980b9 !important;
+}
+
+/* Ensure bite animation is visible above everything */
+#bite-animation {
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%) scale(0);
+    transition: transform 0.25s ease-out;
+    width: 140px;
+    height: 140px;
+}
+
+#bite-animation.bite-active {
+    transform: translate(-50%, -50%) scale(1);
 }
