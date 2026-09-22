@@ -56,7 +56,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Create task element
-    // Create task element
     function createTaskElement(task) {
         const li = document.createElement('li');
         li.dataset.id = task.id;
@@ -69,13 +68,11 @@ document.addEventListener('DOMContentLoaded', function() {
                       `<span class="task-date">Updated: ${formatDate(task.updated_at)}</span>` : ''}
                 </div>
             </div>
-            <div class="task-actions">
-                <button class="complete-btn" title="Complete task"><i class="fas fa-check"></i></button>
-                <button class="undo-btn" title="Undo completed task"><i class="fas fa-undo"></i></button>
-                <button class="edit-btn" title="Edit task"><i class="fas fa-edit"></i></button>
-                <button class="save-btn" title="Save changes"><i class="fas fa-check"></i></button>
-                <button class="delete-btn" title="Delete task"><i class="fas fa-times"></i></button>
-            </div>
+            <button class="complete-btn" title="Complete task"><i class="fas fa-check"></i></button>
+            <button class="undo-btn" title="Undo completed task"><i class="fas fa-undo"></i></button>
+            <button class="edit-btn" title="Edit task"><i class="fas fa-edit"></i></button>
+            <button class="save-btn" title="Save changes"><i class="fas fa-check"></i></button>
+            <button class="delete-btn" title="Delete task"><i class="fas fa-times"></i></button>
         `;
         
         const completeBtn = li.querySelector('.complete-btn');
@@ -89,12 +86,12 @@ document.addEventListener('DOMContentLoaded', function() {
             completeBtn.style.display = 'none';
             editBtn.style.display = 'none';
             saveBtn.style.display = 'none';
-            undoBtn.style.display = 'inline-flex';
+            undoBtn.style.display = 'flex';
         } else {
             ongoingTasks.appendChild(li);
             undoBtn.style.display = 'none';
-            completeBtn.style.display = 'inline-flex';
-            editBtn.style.display = 'inline-flex';
+            completeBtn.style.display = 'flex';
+            editBtn.style.display = 'flex';
             saveBtn.style.display = 'none';
         }
         
@@ -134,12 +131,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 updated_at: now
             };
             
-            // Save to localStorage
             const tasks = getStoredTasks();
             tasks.push(newTask);
             saveStoredTasks(tasks);
 
-            // Render to DOM
             createTaskElement(newTask);
             taskInput.value = '';
         }
@@ -168,7 +163,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const deleteBtn = li.querySelector('.delete-btn');
         
         // Helper to change task status
-        function updateTaskCompletion(isCompleted) {
+        function setTaskCompletion(isCompleted) {
             const now = new Date().toISOString();
             const tasks = getStoredTasks();
             const task = tasks.find(t => t.id === taskId);
@@ -183,12 +178,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 completeBtn.style.display = 'none';
                 editBtn.style.display = 'none';
                 saveBtn.style.display = 'none';
-                undoBtn.style.display = 'inline-flex';
+                undoBtn.style.display = 'flex';
                 completedTasks.appendChild(li);
             } else {
                 li.classList.remove('completed');
-                completeBtn.style.display = 'inline-flex';
-                editBtn.style.display = 'inline-flex';
+                completeBtn.style.display = 'flex';
+                editBtn.style.display = 'flex';
                 undoBtn.style.display = 'none';
                 ongoingTasks.appendChild(li);
             }
@@ -198,13 +193,13 @@ document.addEventListener('DOMContentLoaded', function() {
         // 1. Complete ONLY when clicking check button
         completeBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            updateTaskCompletion(true);
+            setTaskCompletion(true);
         });
 
         // 2. Undo ONLY when clicking undo button
         undoBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            updateTaskCompletion(false);
+            setTaskCompletion(false);
         });
         
         // Edit task
@@ -213,7 +208,7 @@ document.addEventListener('DOMContentLoaded', function() {
             taskText.contentEditable = true;
             taskText.focus();
             editBtn.style.display = 'none';
-            saveBtn.style.display = 'inline-flex';
+            saveBtn.style.display = 'flex';
         });
         
         // Save edited task
@@ -236,7 +231,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 taskText.contentEditable = false;
                 saveBtn.style.display = 'none';
-                editBtn.style.display = 'inline-flex';
+                editBtn.style.display = 'flex';
                 updateTaskDates(li, task);
             }
         });
