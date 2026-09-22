@@ -273,27 +273,45 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Bite animation helper
     // Bite animation helper
+    // Bite animation function (Dynamic Injection)
     function playBiteAnimation(taskElement, callback) {
-        if (!biteAnim) {
-            if (callback) callback();
-            return;
-        }
-
         const rect = taskElement.getBoundingClientRect();
         
-        // Position at the center of the targeted task card
-        biteAnim.style.left = `${rect.left + rect.width / 2}px`;
-        biteAnim.style.top = `${rect.top + rect.height / 2}px`;
+        // 1. Create a fresh bite element
+        const bite = document.createElement('img');
+        bite.src = 'photos/Bite2.webp';
+        bite.alt = 'Chomp!';
+        bite.className = 'dynamic-bite';
         
-        // Force the browser to reset before animating
-        biteAnim.classList.remove('bite-active');
-        void biteAnim.offsetWidth; 
-        
-        // Trigger the pop-in animation
-        biteAnim.classList.add('bite-active');
-        
+        // 2. Position exactly at the center of the clicked task card
+        bite.style.position = 'fixed';
+        bite.style.left = `${rect.left + rect.width / 2}px`;
+        bite.style.top = `${rect.top + rect.height / 2}px`;
+        bite.style.transform = 'translate(-50%, -50%) scale(0.2)';
+        bite.style.width = '140px';
+        bite.style.height = '140px';
+        bite.style.pointerEvents = 'none';
+        bite.style.zIndex = '999999';
+        bite.style.transition = 'transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s ease-in-out';
+        bite.style.opacity = '1';
+
+        // 3. Mount directly to body
+        document.body.appendChild(bite);
+
+        // 4. Trigger pop animation
+        requestAnimationFrame(() => {
+            bite.style.transform = 'translate(-50%, -50%) scale(1.2)';
+        });
+
+        // 5. Complete animation, trigger action, and clean up element
         setTimeout(() => {
-            biteAnim.classList.remove('bite-active');
+            bite.style.opacity = '0';
+            bite.style.transform = 'translate(-50%, -50%) scale(1.4)';
+            
+            setTimeout(() => {
+                bite.remove();
+            }, 200);
+
             if (callback) callback();
         }, 350);
     }
