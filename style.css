@@ -287,17 +287,13 @@ li:hover {
 /* ===== Bite Animation ===== */
 #bite-container {
     position: fixed;
-    width: 100px;
-    height: 100px;
+    width: 120px;
+    height: 120px;
     z-index: 99999;
     pointer-events: none;
     transform: translate(-50%, -50%);
     opacity: 0;
-    display: block;
-}
-
-#bite-container.bite-hidden {
-    display: none;
+    display: none; /* Keep hidden until triggered */
 }
 
 #bite-container img {
