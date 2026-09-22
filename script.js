@@ -267,30 +267,30 @@ document.addEventListener('DOMContentLoaded', function() {
     function playBiteAnimation(taskElement) {
         if (!biteContainer || !biteImage) return;
 
-        // Force WebP animation to reset
+        // Force WebP to replay
         const currentSrc = biteImage.src.split('?')[0];
         biteImage.src = `${currentSrc}?t=${Date.now()}`;
 
-        // Position directly over the target element
+        // Center directly over the task being deleted
         const rect = taskElement.getBoundingClientRect();
         biteContainer.style.left = `${rect.left + rect.width / 2}px`;
         biteContainer.style.top = `${rect.top + rect.height / 2}px`;
 
-        // Trigger animation
-        biteContainer.classList.remove('bite-hidden', 'bite-active');
-        void biteContainer.offsetWidth; // Force reflow
+        // Reset and trigger animation
+        biteContainer.classList.remove('bite-active');
+        void biteContainer.offsetWidth; // Force CSS repaint
         biteContainer.classList.add('bite-active');
 
-        // Remove item mid-bite & reset animation container
+        // Delete the task mid-chomp
         setTimeout(() => {
             if (taskElement && taskElement.parentNode) {
                 taskElement.remove();
             }
         }, 300);
 
+        // Hide teeth when animation ends
         setTimeout(() => {
             biteContainer.classList.remove('bite-active');
-            biteContainer.classList.add('bite-hidden');
         }, 600);
     }
 
