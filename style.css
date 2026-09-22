@@ -201,20 +201,6 @@ li:hover {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
-.complete-btn {
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    border: 2px solid #4fc1ff;
-    background: transparent;
-    margin: 0 10px;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-    pointer-events: none;
-}
 
 .complete-btn.checked {
     background: #4fc1ff;
@@ -500,5 +486,63 @@ li:hover {
 @media (min-width: 1200px) {
     .container {
         max-width: 600px;
+    }
+}
+
+/* ===== Action Buttons Styling ===== */
+.action-buttons {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: 10px;
+    flex-shrink: 0;
+}
+
+/* Complete / Undo Button */
+.toggle-complete-btn {
+    background: #2ecc71;
+    color: white;
+    border: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 13px;
+    transition: background 0.2s;
+}
+
+.toggle-complete-btn:hover {
+    background: #27ae60;
+}
+
+/* Turn orange/yellow when in completed tab for "undo" */
+.completed .toggle-complete-btn {
+    background: #3498db;
+}
+
+.completed .toggle-complete-btn:hover {
+    background: #2980b9;
+}
+
+/* Ensure padding on the task text is clean without the old left circle */
+.task-content {
+    flex: 1;
+    padding: 4px 8px;
+    min-width: 0;
+}
+
+.task-text {
+    cursor: default; /* Remove pointer cursor from text */
+}
+
+/* Responsive button sizing */
+@media (max-width: 500px) {
+    .toggle-complete-btn {
+        width: 25px;
+        height: 25px;
+        font-size: 12px;
     }
 }
