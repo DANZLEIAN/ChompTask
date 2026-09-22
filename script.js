@@ -5,7 +5,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const ongoingTasks = document.getElementById('ongoingTasks');
     const completedTasks = document.getElementById('completedTasks');
     const deleteAllCompletedBtn = document.getElementById('deleteAllCompleted');
-    const biteAnim = document.getElementById('bite-animation');
+    const biteContainer = document.getElementById('bite-container');
+    const biteImage = document.getElementById('bite-image');
     const chompSound = document.getElementById('chompSound');
     const tabButtons = document.querySelectorAll('.tab-button');
     const tabContents = document.querySelectorAll('.tab-content');
@@ -238,6 +239,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Play chomp sound function
     function playChompSound() {
+        if (!chompSound) return;
         chompSound.currentTime = 0;
         chompSound.play().catch(e => console.log("Audio play failed:", e));
     }
@@ -248,7 +250,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const hasCompleted = tasks.some(t => t.is_completed);
 
         if (hasCompleted) {
-            // Filter out completed tasks in localStorage
             tasks = tasks.filter(t => !t.is_completed);
             saveStoredTasks(tasks);
 
@@ -264,15 +265,32 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Bite animation function
     function playBiteAnimation(taskElement) {
+        if (!biteContainer || !biteImage) return;
+
+        // Force WebP animation to reset
+        const currentSrc = biteImage.src.split('?')[0];
+        biteImage.src = `${currentSrc}?t=${Date.now()}`;
+
+        // Position directly over the target element
         const rect = taskElement.getBoundingClientRect();
-        biteAnim.style.left = `${rect.left + rect.width / 2}px`;
-        biteAnim.style.top = `${rect.top + rect.height / 2}px`;
-        
-        biteAnim.classList.add('bite-active');
-        
+        biteContainer.style.left = `${rect.left + rect.width / 2}px`;
+        biteContainer.style.top = `${rect.top + rect.height / 2}px`;
+
+        // Trigger animation
+        biteContainer.classList.remove('bite-hidden', 'bite-active');
+        void biteContainer.offsetWidth; // Force reflow
+        biteContainer.classList.add('bite-active');
+
+        // Remove item mid-bite & reset animation container
         setTimeout(() => {
-            taskElement.remove();
-            biteAnim.classList.remove('bite-active');
+            if (taskElement && taskElement.parentNode) {
+                taskElement.remove();
+            }
+        }, 300);
+
+        setTimeout(() => {
+            biteContainer.classList.remove('bite-active');
+            biteContainer.classList.add('bite-hidden');
         }, 600);
     }
 
@@ -299,7 +317,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (e.key === 'Enter') addTask();
     });
 
-    // Add initial styling for bubbles
+    // Bubbles keyframes & styling
     const style = document.createElement('style');
     style.textContent = `
         .bubble {
@@ -307,13 +325,7 @@ document.addEventListener('DOMContentLoaded', function() {
             bottom: -100px;
             background: rgba(255, 255, 255, 0.2);
             border-radius: 50%;
-            animation: bubble ${Math.random() * 10 + 10}s linear infinite;
-        }
-        
-        @keyframes bubble {
-            0% { transform: translateY(0) scale(0.5); opacity: 0; }
-            50% { opacity: 0.5; }
-            100% { transform: translateY(-100vh) scale(1.2); opacity: 0; }
+            animation: bubble 12s linear infinite;
         }
     `;
     document.head.appendChild(style);
