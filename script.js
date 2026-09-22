@@ -10,6 +10,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const tabButtons = document.querySelectorAll('.tab-button');
     const tabContents = document.querySelectorAll('.tab-content');
 
+    // Preload audio and image
+    if (chompSound) chompSound.load();
+
     // Storage Key
     const STORAGE_KEY = 'chompTasks_data';
 
@@ -54,7 +57,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Create task element
+    // Create task element (Horizontal button layout)
     function createTaskElement(task) {
         const li = document.createElement('li');
         li.dataset.id = task.id;
@@ -67,22 +70,24 @@ document.addEventListener('DOMContentLoaded', function() {
                       `<span class="task-date">Updated: ${formatDate(task.updated_at)}</span>` : ''}
                 </div>
             </div>
-            <div class="task-actions">
-                <button class="complete-action-btn" title="Complete task"><i class="fas fa-check"></i></button>
-                <button class="edit-btn" title="Edit task"><i class="fas fa-edit"></i></button>
-                <button class="save-btn" title="Save changes" style="display: none;"><i class="fas fa-check-double"></i></button>
-                <button class="delete-btn" title="Delete task"><i class="fas fa-times"></i></button>
-            </div>
+            <button class="complete-btn" title="${task.is_completed ? 'Restore task' : 'Complete task'}">
+                <i class="fas ${task.is_completed ? 'fa-undo' : 'fa-check'}"></i>
+            </button>
+            <button class="edit-btn" title="Edit task"><i class="fas fa-edit"></i></button>
+            <button class="save-btn" title="Save changes" style="display: none;"><i class="fas fa-check-double"></i></button>
+            <button class="delete-btn" title="Delete task"><i class="fas fa-times"></i></button>
         `;
         
+        const completeBtn = li.querySelector('.complete-btn');
+        const editBtn = li.querySelector('.edit-btn');
+        const saveBtn = li.querySelector('.save-btn');
+
         if (task.is_completed) {
             li.classList.add('completed');
+            completeBtn.classList.add('undo-mode');
+            editBtn.style.display = 'none';
+            saveBtn.style.display = 'none';
             completedTasks.appendChild(li);
-            li.querySelector('.edit-btn').style.display = 'none';
-            // Change checkmark to an undo arrow when inside the Completed tab
-            const completeBtn = li.querySelector('.complete-action-btn');
-            completeBtn.title = "Move back to Ongoing";
-            completeBtn.innerHTML = '<i class="fas fa-undo"></i>';
         } else {
             ongoingTasks.appendChild(li);
         }
@@ -147,20 +152,19 @@ document.addEventListener('DOMContentLoaded', function() {
     // Set up event listeners for a task item
     function setupTaskEvents(li) {
         const taskId = li.dataset.id;
-        const completeBtn = li.querySelector('.complete-action-btn');
+        const completeBtn = li.querySelector('.complete-btn');
         const taskText = li.querySelector('.task-text');
         const editBtn = li.querySelector('.edit-btn');
         const saveBtn = li.querySelector('.save-btn');
         const deleteBtn = li.querySelector('.delete-btn');
         
-        // 1. Complete Task via dedicated check button
+        // Complete / Restore button
         completeBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             const isCurrentlyCompleted = li.classList.contains('completed');
             const targetCompletedState = !isCurrentlyCompleted;
             const now = new Date().toISOString();
 
-            // Update in localStorage
             const tasks = getStoredTasks();
             const task = tasks.find(t => t.id === taskId);
             if (task) {
@@ -169,37 +173,39 @@ document.addEventListener('DOMContentLoaded', function() {
                 saveStoredTasks(tasks);
             }
 
-            // Play Chomp bite sound and animation on completing
+            // Play Chomp bite sound and animation
             playChompSound();
             playBiteAnimation(li, () => {
                 if (targetCompletedState) {
                     li.classList.add('completed');
+                    completeBtn.classList.add('undo-mode');
+                    completeBtn.title = "Restore task";
+                    completeBtn.innerHTML = '<i class="fas fa-undo"></i>';
                     editBtn.style.display = 'none';
                     saveBtn.style.display = 'none';
-                    completeBtn.title = "Move back to Ongoing";
-                    completeBtn.innerHTML = '<i class="fas fa-undo"></i>';
                     completedTasks.appendChild(li);
                 } else {
                     li.classList.remove('completed');
-                    editBtn.style.display = 'flex';
+                    completeBtn.classList.remove('undo-mode');
                     completeBtn.title = "Complete task";
                     completeBtn.innerHTML = '<i class="fas fa-check"></i>';
+                    editBtn.style.display = 'inline-flex';
                     ongoingTasks.appendChild(li);
                 }
                 if (task) updateTaskDates(li, task);
             });
         });
         
-        // 2. Edit task
+        // Edit task
         editBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             taskText.contentEditable = true;
             taskText.focus();
             editBtn.style.display = 'none';
-            saveBtn.style.display = 'flex';
+            saveBtn.style.display = 'inline-flex';
         });
         
-        // 3. Save edited task
+        // Save edited task
         saveBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             const newText = taskText.textContent.trim();
@@ -219,12 +225,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 taskText.contentEditable = false;
                 saveBtn.style.display = 'none';
-                editBtn.style.display = 'flex';
+                editBtn.style.display = 'inline-flex';
                 updateTaskDates(li, task);
             }
         });
         
-        // 4. Delete task
+        // Delete task
         deleteBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             
@@ -241,6 +247,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Play chomp sound function
     function playChompSound() {
+        if (!chompSound) return;
         chompSound.currentTime = 0;
         chompSound.play().catch(e => console.log("Audio play failed:", e));
     }
@@ -264,16 +271,22 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Bite animation helper with callback
+    // Bite animation helper
     function playBiteAnimation(taskElement, callback) {
+        if (!biteAnim) {
+            if (callback) callback();
+            return;
+        }
+
         const rect = taskElement.getBoundingClientRect();
         biteAnim.style.left = `${rect.left + rect.width / 2}px`;
         biteAnim.style.top = `${rect.top + rect.height / 2}px`;
-        
+        biteAnim.style.display = 'block';
         biteAnim.classList.add('bite-active');
         
         setTimeout(() => {
             biteAnim.classList.remove('bite-active');
+            biteAnim.style.display = 'none';
             if (callback) callback();
         }, 500);
     }
@@ -301,7 +314,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (e.key === 'Enter') addTask();
     });
 
-    // Bubble styles
+    // Add bubble animations
     const style = document.createElement('style');
     style.textContent = `
         .bubble {
@@ -311,7 +324,6 @@ document.addEventListener('DOMContentLoaded', function() {
             border-radius: 50%;
             animation: bubble ${Math.random() * 10 + 10}s linear infinite;
         }
-        
         @keyframes bubble {
             0% { transform: translateY(0) scale(0.5); opacity: 0; }
             50% { opacity: 0.5; }
