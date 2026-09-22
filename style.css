@@ -603,3 +603,50 @@ li:hover {
     background: #1976d2;
     transform: scale(1.1);
 }
+
+
+/* Check / Complete Button (Square Green Button on the right) */
+.task-list li .complete-btn {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    background: #4caf50 !important;
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: 8px !important;
+    font-size: 0.9rem !important;
+    margin: 0 4px 0 0 !important;
+    cursor: pointer !important;
+    transition: transform 0.15s ease, background-color 0.15s ease !important;
+}
+
+.task-list li .complete-btn:hover {
+    background: #43a047 !important;
+    transform: scale(1.08) !important;
+}
+
+/* Undo Button (Square Blue/Purple Button on the right in Completed Tab) */
+.task-list li .undo-btn {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    background: #0288d1 !important;
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: 8px !important;
+    font-size: 0.9rem !important;
+    margin: 0 4px 0 0 !important;
+    cursor: pointer !important;
+    transition: transform 0.15s ease, background-color 0.15s ease !important;
+}
+
+.task-list li .undo-btn:hover {
+    background: #0277bd !important;
+    transform: scale(1.08) !important;
+}
