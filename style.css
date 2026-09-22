@@ -478,6 +478,37 @@ li:hover {
     }
 }
 
+/* Container for action buttons */
+.task-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Green complete button */
+.complete-action-btn {
+    background-color: #2ecc71;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+.complete-action-btn:hover {
+    background-color: #27ae60;
+    transform: scale(1.05);
+}
+
+.complete-action-btn:active {
+    transform: scale(0.95);
+}
+
 /* Tablet devices (portrait) */
 @media (min-width: 601px) and (max-width: 768px) {
     .container {
