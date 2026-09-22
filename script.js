@@ -10,9 +10,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const tabButtons = document.querySelectorAll('.tab-button');
     const tabContents = document.querySelectorAll('.tab-content');
 
-    // Preload audio and image
-    if (chompSound) chompSound.load();
-
     // Storage Key
     const STORAGE_KEY = 'chompTasks_data';
 
@@ -57,11 +54,12 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Create task element (Horizontal button layout)
+    // Create task element
     function createTaskElement(task) {
         const li = document.createElement('li');
         li.dataset.id = task.id;
         li.innerHTML = `
+            <button class="complete-btn ${task.is_completed ? 'checked' : ''}">${task.is_completed ? '✓' : ''}</button>
             <div class="task-content">
                 <span class="task-text">${task.task_text}</span>
                 <div class="task-dates">
@@ -70,24 +68,16 @@ document.addEventListener('DOMContentLoaded', function() {
                       `<span class="task-date">Updated: ${formatDate(task.updated_at)}</span>` : ''}
                 </div>
             </div>
-            <button class="complete-btn" title="${task.is_completed ? 'Restore task' : 'Complete task'}">
-                <i class="fas ${task.is_completed ? 'fa-undo' : 'fa-check'}"></i>
-            </button>
-            <button class="edit-btn" title="Edit task"><i class="fas fa-edit"></i></button>
-            <button class="save-btn" title="Save changes" style="display: none;"><i class="fas fa-check-double"></i></button>
-            <button class="delete-btn" title="Delete task"><i class="fas fa-times"></i></button>
+            <button class="edit-btn"><i class="fas fa-edit"></i></button>
+            <button class="save-btn"><i class="fas fa-check"></i></button>
+            <button class="delete-btn"><i class="fas fa-times"></i></button>
         `;
         
-        const completeBtn = li.querySelector('.complete-btn');
-        const editBtn = li.querySelector('.edit-btn');
-        const saveBtn = li.querySelector('.save-btn');
-
         if (task.is_completed) {
             li.classList.add('completed');
-            completeBtn.classList.add('undo-mode');
-            editBtn.style.display = 'none';
-            saveBtn.style.display = 'none';
             completedTasks.appendChild(li);
+            li.querySelector('.edit-btn').style.display = 'none';
+            li.querySelector('.save-btn').style.display = 'none';
         } else {
             ongoingTasks.appendChild(li);
         }
@@ -128,10 +118,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 updated_at: now
             };
             
+            // Save to localStorage
             const tasks = getStoredTasks();
             tasks.push(newTask);
             saveStoredTasks(tasks);
 
+            // Render to DOM
             createTaskElement(newTask);
             taskInput.value = '';
         }
@@ -158,42 +150,41 @@ document.addEventListener('DOMContentLoaded', function() {
         const saveBtn = li.querySelector('.save-btn');
         const deleteBtn = li.querySelector('.delete-btn');
         
-        // Complete / Restore button
-        completeBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const isCurrentlyCompleted = li.classList.contains('completed');
-            const targetCompletedState = !isCurrentlyCompleted;
+        // Task completion
+        li.addEventListener('click', (e) => {
+            if (taskText.isContentEditable) return;
+            
+            if (e.target === deleteBtn || e.target.closest('.delete-btn') || 
+                e.target === editBtn || e.target.closest('.edit-btn') ||
+                e.target === saveBtn || e.target.closest('.save-btn')) return;
+            
+            const isCompleted = !li.classList.contains('completed');
             const now = new Date().toISOString();
 
+            // Update in localStorage
             const tasks = getStoredTasks();
             const task = tasks.find(t => t.id === taskId);
             if (task) {
-                task.is_completed = targetCompletedState;
+                task.is_completed = isCompleted;
                 task.updated_at = now;
                 saveStoredTasks(tasks);
-            }
 
-            // Play Chomp bite sound and animation
-            playChompSound();
-            playBiteAnimation(li, () => {
-                if (targetCompletedState) {
-                    li.classList.add('completed');
-                    completeBtn.classList.add('undo-mode');
-                    completeBtn.title = "Restore task";
-                    completeBtn.innerHTML = '<i class="fas fa-undo"></i>';
+                // Update DOM
+                li.classList.toggle('completed');
+                completeBtn.classList.toggle('checked');
+                completeBtn.innerHTML = completeBtn.classList.contains('checked') ? '✓' : '';
+                
+                if (isCompleted) {
+                    completedTasks.appendChild(li);
                     editBtn.style.display = 'none';
                     saveBtn.style.display = 'none';
-                    completedTasks.appendChild(li);
                 } else {
-                    li.classList.remove('completed');
-                    completeBtn.classList.remove('undo-mode');
-                    completeBtn.title = "Complete task";
-                    completeBtn.innerHTML = '<i class="fas fa-check"></i>';
-                    editBtn.style.display = 'inline-flex';
                     ongoingTasks.appendChild(li);
+                    editBtn.style.display = 'flex';
                 }
-                if (task) updateTaskDates(li, task);
-            });
+                
+                updateTaskDates(li, task);
+            }
         });
         
         // Edit task
@@ -202,7 +193,7 @@ document.addEventListener('DOMContentLoaded', function() {
             taskText.contentEditable = true;
             taskText.focus();
             editBtn.style.display = 'none';
-            saveBtn.style.display = 'inline-flex';
+            saveBtn.style.display = 'flex';
         });
         
         // Save edited task
@@ -225,7 +216,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 taskText.contentEditable = false;
                 saveBtn.style.display = 'none';
-                editBtn.style.display = 'inline-flex';
+                editBtn.style.display = 'flex';
                 updateTaskDates(li, task);
             }
         });
@@ -234,20 +225,19 @@ document.addEventListener('DOMContentLoaded', function() {
         deleteBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             
+            // Remove from localStorage
             let tasks = getStoredTasks();
             tasks = tasks.filter(t => t.id !== taskId);
             saveStoredTasks(tasks);
 
+            // Play animation and sound
+            playBiteAnimation(li);
             playChompSound();
-            playBiteAnimation(li, () => {
-                li.remove();
-            });
         });
     }
 
     // Play chomp sound function
     function playChompSound() {
-        if (!chompSound) return;
         chompSound.currentTime = 0;
         chompSound.play().catch(e => console.log("Audio play failed:", e));
     }
@@ -258,6 +248,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const hasCompleted = tasks.some(t => t.is_completed);
 
         if (hasCompleted) {
+            // Filter out completed tasks in localStorage
             tasks = tasks.filter(t => !t.is_completed);
             saveStoredTasks(tasks);
 
@@ -265,55 +256,24 @@ document.addEventListener('DOMContentLoaded', function() {
             const items = completedTasks.querySelectorAll('li');
             items.forEach((item, index) => {
                 setTimeout(() => {
-                    playBiteAnimation(item, () => item.remove());
+                    playBiteAnimation(item);
                 }, index * 150);
             });
         }
     });
 
-    // Bite animation helper
-    // Bite animation helper
-    // Bite animation function (Dynamic Injection)
-    function playBiteAnimation(taskElement, callback) {
+    // Bite animation function
+    function playBiteAnimation(taskElement) {
         const rect = taskElement.getBoundingClientRect();
+        biteAnim.style.left = `${rect.left + rect.width / 2}px`;
+        biteAnim.style.top = `${rect.top + rect.height / 2}px`;
         
-        // 1. Create a fresh bite element
-        const bite = document.createElement('img');
-        bite.src = 'photos/Bite2.webp';
-        bite.alt = 'Chomp!';
-        bite.className = 'dynamic-bite';
+        biteAnim.classList.add('bite-active');
         
-        // 2. Position exactly at the center of the clicked task card
-        bite.style.position = 'fixed';
-        bite.style.left = `${rect.left + rect.width / 2}px`;
-        bite.style.top = `${rect.top + rect.height / 2}px`;
-        bite.style.transform = 'translate(-50%, -50%) scale(0.2)';
-        bite.style.width = '140px';
-        bite.style.height = '140px';
-        bite.style.pointerEvents = 'none';
-        bite.style.zIndex = '999999';
-        bite.style.transition = 'transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s ease-in-out';
-        bite.style.opacity = '1';
-
-        // 3. Mount directly to body
-        document.body.appendChild(bite);
-
-        // 4. Trigger pop animation
-        requestAnimationFrame(() => {
-            bite.style.transform = 'translate(-50%, -50%) scale(1.2)';
-        });
-
-        // 5. Complete animation, trigger action, and clean up element
         setTimeout(() => {
-            bite.style.opacity = '0';
-            bite.style.transform = 'translate(-50%, -50%) scale(1.4)';
-            
-            setTimeout(() => {
-                bite.remove();
-            }, 200);
-
-            if (callback) callback();
-        }, 350);
+            taskElement.remove();
+            biteAnim.classList.remove('bite-active');
+        }, 600);
     }
 
     // Create floating bubbles
@@ -339,7 +299,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (e.key === 'Enter') addTask();
     });
 
-    // Add bubble animations
+    // Add initial styling for bubbles
     const style = document.createElement('style');
     style.textContent = `
         .bubble {
@@ -349,6 +309,7 @@ document.addEventListener('DOMContentLoaded', function() {
             border-radius: 50%;
             animation: bubble ${Math.random() * 10 + 10}s linear infinite;
         }
+        
         @keyframes bubble {
             0% { transform: translateY(0) scale(0.5); opacity: 0; }
             50% { opacity: 0.5; }
@@ -357,6 +318,6 @@ document.addEventListener('DOMContentLoaded', function() {
     `;
     document.head.appendChild(style);
 
-    // Initial load
+    // Initial load of tasks
     loadTasks();
 });
