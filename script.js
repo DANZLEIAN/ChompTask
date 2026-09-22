@@ -13,7 +13,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Storage Key
     const STORAGE_KEY = 'chompTasks_data';
 
-    // --- LocalStorage Helpers ---
     function getStoredTasks() {
         const data = localStorage.getItem(STORAGE_KEY);
         return data ? JSON.parse(data) : [];
@@ -23,14 +22,12 @@ document.addEventListener('DOMContentLoaded', function() {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
     }
 
-    // Create bubbles
     createBubbles();
 
-    // Tab switching functionality
+    // Tab switching
     tabButtons.forEach(button => {
         button.addEventListener('click', () => {
             const tabId = button.getAttribute('data-tab');
-            
             tabButtons.forEach(btn => btn.classList.remove('active'));
             button.classList.add('active');
             
@@ -43,23 +40,19 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Load tasks from localStorage
+    // Load tasks from storage
     function loadTasks() {
         ongoingTasks.innerHTML = '';
         completedTasks.innerHTML = '';
-        
         const tasks = getStoredTasks();
-        tasks.forEach(task => {
-            createTaskElement(task);
-        });
+        tasks.forEach(task => createTaskElement(task));
     }
 
-    // Create task element (Original HTML structure)
+    // ORIGINAL task element structure: Only task content, Edit, Save, and Delete
     function createTaskElement(task) {
         const li = document.createElement('li');
         li.dataset.id = task.id;
         li.innerHTML = `
-            <button class="complete-btn ${task.is_completed ? 'checked' : ''}">${task.is_completed ? '✓' : ''}</button>
             <div class="task-content">
                 <span class="task-text">${task.task_text}</span>
                 <div class="task-dates">
@@ -69,7 +62,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             </div>
             <button class="edit-btn"><i class="fas fa-edit"></i></button>
-            <button class="save-btn"><i class="fas fa-check"></i></button>
+            <button class="save-btn" style="display: none;"><i class="fas fa-check"></i></button>
             <button class="delete-btn"><i class="fas fa-times"></i></button>
         `;
         
@@ -77,7 +70,6 @@ document.addEventListener('DOMContentLoaded', function() {
             li.classList.add('completed');
             completedTasks.appendChild(li);
             li.querySelector('.edit-btn').style.display = 'none';
-            li.querySelector('.save-btn').style.display = 'none';
         } else {
             ongoingTasks.appendChild(li);
         }
@@ -85,7 +77,6 @@ document.addEventListener('DOMContentLoaded', function() {
         setupTaskEvents(li);
     }
 
-    // Date formatting helper
     function formatDate(dateInput) {
         const options = { 
             year: 'numeric', 
@@ -94,20 +85,13 @@ document.addEventListener('DOMContentLoaded', function() {
             hour: '2-digit',
             minute: '2-digit'
         };
-        
         const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
-        
-        if (isNaN(date.getTime())) {
-            return 'Just now';
-        }
-        
+        if (isNaN(date.getTime())) return 'Just now';
         return date.toLocaleDateString(undefined, options);
     }
 
-    // Add Task Function
     function addTask() {
         const taskText = taskInput.value.trim();
-        
         if (taskText) {
             const now = new Date().toISOString();
             const newTask = {
@@ -127,7 +111,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Update task dates in DOM
     function updateTaskDates(element, taskData) {
         const datesDiv = element.querySelector('.task-dates');
         if (datesDiv) {
@@ -139,18 +122,20 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Set up event listeners for a task item
     function setupTaskEvents(li) {
         const taskId = li.dataset.id;
-        const completeBtn = li.querySelector('.complete-btn');
         const taskText = li.querySelector('.task-text');
         const editBtn = li.querySelector('.edit-btn');
         const saveBtn = li.querySelector('.save-btn');
         const deleteBtn = li.querySelector('.delete-btn');
         
-        // Task completion (toggle between ongoing and completed)
-        completeBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
+        // Clicking the task body toggles completion (Original behavior)
+        li.addEventListener('click', (e) => {
+            if (taskText.isContentEditable) return;
+            if (e.target === deleteBtn || e.target.closest('.delete-btn') || 
+                e.target === editBtn || e.target.closest('.edit-btn') ||
+                e.target === saveBtn || e.target.closest('.save-btn')) return;
+            
             const isCompleted = !li.classList.contains('completed');
             const now = new Date().toISOString();
 
@@ -162,8 +147,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 saveStoredTasks(tasks);
 
                 li.classList.toggle('completed');
-                completeBtn.classList.toggle('checked');
-                completeBtn.innerHTML = completeBtn.classList.contains('checked') ? '✓' : '';
                 
                 if (isCompleted) {
                     completedTasks.appendChild(li);
@@ -178,7 +161,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        // Edit task
+        // Edit
         editBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             taskText.contentEditable = true;
@@ -187,11 +170,10 @@ document.addEventListener('DOMContentLoaded', function() {
             saveBtn.style.display = 'flex';
         });
         
-        // Save edited task
+        // Save
         saveBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             const newText = taskText.textContent.trim();
-            
             if (newText === '') {
                 taskText.textContent = 'Untitled Task';
                 return;
@@ -212,7 +194,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        // Delete task
+        // Delete task triggers original bite animation and sound
         deleteBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             
@@ -225,14 +207,13 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Play chomp sound function
     function playChompSound() {
         if (!chompSound) return;
         chompSound.currentTime = 0;
         chompSound.play().catch(e => console.log("Audio play failed:", e));
     }
 
-    // Delete all completed tasks
+    // Delete all completed
     deleteAllCompletedBtn.addEventListener('click', function() {
         let tasks = getStoredTasks();
         const hasCompleted = tasks.some(t => t.is_completed);
@@ -251,11 +232,16 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Original Bite animation function
+    // Bite animation with cache-bust to force image to display
     function playBiteAnimation(taskElement) {
+        if (!biteAnim) return;
+
         const rect = taskElement.getBoundingClientRect();
         biteAnim.style.left = `${rect.left + rect.width / 2}px`;
         biteAnim.style.top = `${rect.top + rect.height / 2}px`;
+        
+        // Reset image source so the browser is forced to paint the WebP frames
+        biteAnim.src = 'photos/Bite2.webp?' + Date.now();
         
         biteAnim.classList.add('bite-active');
         
@@ -265,7 +251,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 600);
     }
 
-    // Create floating bubbles
     function createBubbles() {
         const bubblesContainer = document.querySelector('.bubbles');
         if (!bubblesContainer) return;
@@ -282,13 +267,11 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Event Listeners
     addTaskBtn.addEventListener('click', addTask);
     taskInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') addTask();
     });
 
-    // Bubble styling
     const style = document.createElement('style');
     style.textContent = `
         .bubble {
@@ -298,7 +281,6 @@ document.addEventListener('DOMContentLoaded', function() {
             border-radius: 50%;
             animation: bubble ${Math.random() * 10 + 10}s linear infinite;
         }
-        
         @keyframes bubble {
             0% { transform: translateY(0) scale(0.5); opacity: 0; }
             50% { opacity: 0.5; }
@@ -307,6 +289,5 @@ document.addEventListener('DOMContentLoaded', function() {
     `;
     document.head.appendChild(style);
 
-    // Initial load
     loadTasks();
 });
