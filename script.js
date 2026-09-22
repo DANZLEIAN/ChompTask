@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Create task element
+    // Create task element (Original HTML structure)
     function createTaskElement(task) {
         const li = document.createElement('li');
         li.dataset.id = task.id;
@@ -118,12 +118,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 updated_at: now
             };
             
-            // Save to localStorage
             const tasks = getStoredTasks();
             tasks.push(newTask);
             saveStoredTasks(tasks);
 
-            // Render to DOM
             createTaskElement(newTask);
             taskInput.value = '';
         }
@@ -150,18 +148,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const saveBtn = li.querySelector('.save-btn');
         const deleteBtn = li.querySelector('.delete-btn');
         
-        // Task completion
-        li.addEventListener('click', (e) => {
-            if (taskText.isContentEditable) return;
-            
-            if (e.target === deleteBtn || e.target.closest('.delete-btn') || 
-                e.target === editBtn || e.target.closest('.edit-btn') ||
-                e.target === saveBtn || e.target.closest('.save-btn')) return;
-            
+        // Task completion (toggle between ongoing and completed)
+        completeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
             const isCompleted = !li.classList.contains('completed');
             const now = new Date().toISOString();
 
-            // Update in localStorage
             const tasks = getStoredTasks();
             const task = tasks.find(t => t.id === taskId);
             if (task) {
@@ -169,7 +161,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 task.updated_at = now;
                 saveStoredTasks(tasks);
 
-                // Update DOM
                 li.classList.toggle('completed');
                 completeBtn.classList.toggle('checked');
                 completeBtn.innerHTML = completeBtn.classList.contains('checked') ? '✓' : '';
@@ -225,12 +216,10 @@ document.addEventListener('DOMContentLoaded', function() {
         deleteBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             
-            // Remove from localStorage
             let tasks = getStoredTasks();
             tasks = tasks.filter(t => t.id !== taskId);
             saveStoredTasks(tasks);
 
-            // Play animation and sound
             playBiteAnimation(li);
             playChompSound();
         });
@@ -238,6 +227,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Play chomp sound function
     function playChompSound() {
+        if (!chompSound) return;
         chompSound.currentTime = 0;
         chompSound.play().catch(e => console.log("Audio play failed:", e));
     }
@@ -248,7 +238,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const hasCompleted = tasks.some(t => t.is_completed);
 
         if (hasCompleted) {
-            // Filter out completed tasks in localStorage
             tasks = tasks.filter(t => !t.is_completed);
             saveStoredTasks(tasks);
 
@@ -262,7 +251,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Bite animation function
+    // Original Bite animation function
     function playBiteAnimation(taskElement) {
         const rect = taskElement.getBoundingClientRect();
         biteAnim.style.left = `${rect.left + rect.width / 2}px`;
@@ -299,7 +288,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (e.key === 'Enter') addTask();
     });
 
-    // Add initial styling for bubbles
+    // Bubble styling
     const style = document.createElement('style');
     style.textContent = `
         .bubble {
@@ -318,6 +307,6 @@ document.addEventListener('DOMContentLoaded', function() {
     `;
     document.head.appendChild(style);
 
-    // Initial load of tasks
+    // Initial load
     loadTasks();
 });
