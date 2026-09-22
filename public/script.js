@@ -10,6 +10,19 @@ document.addEventListener('DOMContentLoaded', function() {
     const tabButtons = document.querySelectorAll('.tab-button');
     const tabContents = document.querySelectorAll('.tab-content');
 
+    // Storage Key
+    const STORAGE_KEY = 'chompTasks_data';
+
+    // --- LocalStorage Helpers ---
+    function getStoredTasks() {
+        const data = localStorage.getItem(STORAGE_KEY);
+        return data ? JSON.parse(data) : [];
+    }
+
+    function saveStoredTasks(tasks) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+    }
+
     // Create bubbles
     createBubbles();
 
@@ -30,20 +43,15 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Load tasks from server
+    // Load tasks from localStorage
     function loadTasks() {
-        axios.get('/api/tasks')
-            .then(response => {
-                ongoingTasks.innerHTML = '';
-                completedTasks.innerHTML = '';
-                
-                response.data.forEach(task => {
-                    createTaskElement(task);
-                });
-            })
-            .catch(error => {
-                console.error('Error loading tasks:', error);
-            });
+        ongoingTasks.innerHTML = '';
+        completedTasks.innerHTML = '';
+        
+        const tasks = getStoredTasks();
+        tasks.forEach(task => {
+            createTaskElement(task);
+        });
     }
 
     // Create task element
@@ -101,39 +109,23 @@ document.addEventListener('DOMContentLoaded', function() {
         const taskText = taskInput.value.trim();
         
         if (taskText) {
-            // Create temporary task with a negative ID to avoid conflicts
-            const tempId = -Date.now(); // Using negative ID to avoid conflicts with server IDs
-            const tempTask = {
-                id: tempId,
+            const now = new Date().toISOString();
+            const newTask = {
+                id: Date.now().toString(),
                 task_text: taskText,
                 is_completed: false,
-                created_at: new Date(),
-                updated_at: new Date()
+                created_at: now,
+                updated_at: now
             };
             
-            // Show immediately
-            createTaskElement(tempTask);
+            // Save to localStorage
+            const tasks = getStoredTasks();
+            tasks.push(newTask);
+            saveStoredTasks(tasks);
+
+            // Render to DOM
+            createTaskElement(newTask);
             taskInput.value = '';
-            
-            // Send to server
-            axios.post('/api/tasks', { task_text: taskText })
-                .then(response => {
-                    // Find and update the temporary task
-                    const tempElement = document.querySelector(`li[data-id="${tempId}"]`);
-                    if (tempElement) {
-                        tempElement.dataset.id = response.data.id;
-                        updateTaskDates(tempElement, response.data);
-                        // Re-bind event listeners to the new element
-                        setupTaskEvents(tempElement);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error adding task:', error);
-                    const tempElement = document.querySelector(`li[data-id="${tempId}"]`);
-                    if (tempElement) {
-                        playBiteAnimation(tempElement);
-                    }
-                });
         }
     }
 
@@ -167,27 +159,32 @@ document.addEventListener('DOMContentLoaded', function() {
                 e.target === saveBtn || e.target.closest('.save-btn')) return;
             
             const isCompleted = !li.classList.contains('completed');
-            
-            axios.put(`/api/tasks/${taskId}`, { is_completed: isCompleted })
-                .then(response => {
-                    li.classList.toggle('completed');
-                    completeBtn.classList.toggle('checked');
-                    completeBtn.innerHTML = completeBtn.classList.contains('checked') ? '✓' : '';
-                    
-                    if (isCompleted) {
-                        completedTasks.appendChild(li);
-                        editBtn.style.display = 'none';
-                        saveBtn.style.display = 'none';
-                    } else {
-                        ongoingTasks.appendChild(li);
-                        editBtn.style.display = 'flex';
-                    }
-                    
-                    updateTaskDates(li, response.data);
-                })
-                .catch(error => {
-                    console.error('Error updating task:', error);
-                });
+            const now = new Date().toISOString();
+
+            // Update in localStorage
+            const tasks = getStoredTasks();
+            const task = tasks.find(t => t.id === taskId);
+            if (task) {
+                task.is_completed = isCompleted;
+                task.updated_at = now;
+                saveStoredTasks(tasks);
+
+                // Update DOM
+                li.classList.toggle('completed');
+                completeBtn.classList.toggle('checked');
+                completeBtn.innerHTML = completeBtn.classList.contains('checked') ? '✓' : '';
+                
+                if (isCompleted) {
+                    completedTasks.appendChild(li);
+                    editBtn.style.display = 'none';
+                    saveBtn.style.display = 'none';
+                } else {
+                    ongoingTasks.appendChild(li);
+                    editBtn.style.display = 'flex';
+                }
+                
+                updateTaskDates(li, task);
+            }
         });
         
         // Edit task
@@ -209,29 +206,33 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
-            axios.put(`/api/tasks/${taskId}`, { task_text: newText })
-                .then(response => {
-                    taskText.contentEditable = false;
-                    saveBtn.style.display = 'none';
-                    editBtn.style.display = 'flex';
-                    updateTaskDates(li, response.data);
-                })
-                .catch(error => {
-                    console.error('Error updating task:', error);
-                });
+            const now = new Date().toISOString();
+            const tasks = getStoredTasks();
+            const task = tasks.find(t => t.id === taskId);
+            if (task) {
+                task.task_text = newText;
+                task.updated_at = now;
+                saveStoredTasks(tasks);
+
+                taskText.contentEditable = false;
+                saveBtn.style.display = 'none';
+                editBtn.style.display = 'flex';
+                updateTaskDates(li, task);
+            }
         });
         
         // Delete task
         deleteBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            axios.delete(`/api/tasks/${taskId}`)
-                .then(() => {
-                    playBiteAnimation(li);
-                    playChompSound();
-                })
-                .catch(error => {
-                    console.error('Error deleting task:', error);
-                });
+            
+            // Remove from localStorage
+            let tasks = getStoredTasks();
+            tasks = tasks.filter(t => t.id !== taskId);
+            saveStoredTasks(tasks);
+
+            // Play animation and sound
+            playBiteAnimation(li);
+            playChompSound();
         });
     }
 
@@ -243,28 +244,29 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Delete all completed tasks
     deleteAllCompletedBtn.addEventListener('click', function() {
-        axios.delete('/api/tasks')
-            .then(response => {
-                if (response.data.message.includes('Deleted')) {
-                    playChompSound();
-                    const items = completedTasks.querySelectorAll('li');
-                    items.forEach((item, index) => {
-                        setTimeout(() => {
-                            playBiteAnimation(item);
-                        }, index * 150);
-                    });
-                }
-            })
-            .catch(error => {
-                console.error('Error deleting completed tasks:', error);
+        let tasks = getStoredTasks();
+        const hasCompleted = tasks.some(t => t.is_completed);
+
+        if (hasCompleted) {
+            // Filter out completed tasks in localStorage
+            tasks = tasks.filter(t => !t.is_completed);
+            saveStoredTasks(tasks);
+
+            playChompSound();
+            const items = completedTasks.querySelectorAll('li');
+            items.forEach((item, index) => {
+                setTimeout(() => {
+                    playBiteAnimation(item);
+                }, index * 150);
             });
+        }
     });
 
     // Bite animation function
     function playBiteAnimation(taskElement) {
         const rect = taskElement.getBoundingClientRect();
-        biteAnim.style.left = `${rect.left + rect.width/2}px`;
-        biteAnim.style.top = `${rect.top + rect.height/2}px`;
+        biteAnim.style.left = `${rect.left + rect.width / 2}px`;
+        biteAnim.style.top = `${rect.top + rect.height / 2}px`;
         
         biteAnim.classList.add('bite-active');
         
@@ -277,6 +279,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Create floating bubbles
     function createBubbles() {
         const bubblesContainer = document.querySelector('.bubbles');
+        if (!bubblesContainer) return;
+
         for (let i = 0; i < 20; i++) {
             const bubble = document.createElement('div');
             bubble.className = 'bubble';
