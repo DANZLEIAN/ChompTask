@@ -59,7 +59,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const li = document.createElement('li');
         li.dataset.id = task.id;
         li.innerHTML = `
-            <button class="complete-btn ${task.is_completed ? 'checked' : ''}">${task.is_completed ? '✓' : ''}</button>
             <div class="task-content">
                 <span class="task-text">${task.task_text}</span>
                 <div class="task-dates">
@@ -68,16 +67,22 @@ document.addEventListener('DOMContentLoaded', function() {
                       `<span class="task-date">Updated: ${formatDate(task.updated_at)}</span>` : ''}
                 </div>
             </div>
-            <button class="edit-btn"><i class="fas fa-edit"></i></button>
-            <button class="save-btn"><i class="fas fa-check"></i></button>
-            <button class="delete-btn"><i class="fas fa-times"></i></button>
+            <div class="task-actions">
+                <button class="complete-action-btn" title="Complete task"><i class="fas fa-check"></i></button>
+                <button class="edit-btn" title="Edit task"><i class="fas fa-edit"></i></button>
+                <button class="save-btn" title="Save changes" style="display: none;"><i class="fas fa-check-double"></i></button>
+                <button class="delete-btn" title="Delete task"><i class="fas fa-times"></i></button>
+            </div>
         `;
         
         if (task.is_completed) {
             li.classList.add('completed');
             completedTasks.appendChild(li);
             li.querySelector('.edit-btn').style.display = 'none';
-            li.querySelector('.save-btn').style.display = 'none';
+            // Change checkmark to an undo arrow when inside the Completed tab
+            const completeBtn = li.querySelector('.complete-action-btn');
+            completeBtn.title = "Move back to Ongoing";
+            completeBtn.innerHTML = '<i class="fas fa-undo"></i>';
         } else {
             ongoingTasks.appendChild(li);
         }
@@ -118,12 +123,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 updated_at: now
             };
             
-            // Save to localStorage
             const tasks = getStoredTasks();
             tasks.push(newTask);
             saveStoredTasks(tasks);
 
-            // Render to DOM
             createTaskElement(newTask);
             taskInput.value = '';
         }
@@ -144,50 +147,50 @@ document.addEventListener('DOMContentLoaded', function() {
     // Set up event listeners for a task item
     function setupTaskEvents(li) {
         const taskId = li.dataset.id;
-        const completeBtn = li.querySelector('.complete-btn');
+        const completeBtn = li.querySelector('.complete-action-btn');
         const taskText = li.querySelector('.task-text');
         const editBtn = li.querySelector('.edit-btn');
         const saveBtn = li.querySelector('.save-btn');
         const deleteBtn = li.querySelector('.delete-btn');
         
-        // Task completion
-        li.addEventListener('click', (e) => {
-            if (taskText.isContentEditable) return;
-            
-            if (e.target === deleteBtn || e.target.closest('.delete-btn') || 
-                e.target === editBtn || e.target.closest('.edit-btn') ||
-                e.target === saveBtn || e.target.closest('.save-btn')) return;
-            
-            const isCompleted = !li.classList.contains('completed');
+        // 1. Complete Task via dedicated check button
+        completeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isCurrentlyCompleted = li.classList.contains('completed');
+            const targetCompletedState = !isCurrentlyCompleted;
             const now = new Date().toISOString();
 
             // Update in localStorage
             const tasks = getStoredTasks();
             const task = tasks.find(t => t.id === taskId);
             if (task) {
-                task.is_completed = isCompleted;
+                task.is_completed = targetCompletedState;
                 task.updated_at = now;
                 saveStoredTasks(tasks);
+            }
 
-                // Update DOM
-                li.classList.toggle('completed');
-                completeBtn.classList.toggle('checked');
-                completeBtn.innerHTML = completeBtn.classList.contains('checked') ? '✓' : '';
-                
-                if (isCompleted) {
-                    completedTasks.appendChild(li);
+            // Play Chomp bite sound and animation on completing
+            playChompSound();
+            playBiteAnimation(li, () => {
+                if (targetCompletedState) {
+                    li.classList.add('completed');
                     editBtn.style.display = 'none';
                     saveBtn.style.display = 'none';
+                    completeBtn.title = "Move back to Ongoing";
+                    completeBtn.innerHTML = '<i class="fas fa-undo"></i>';
+                    completedTasks.appendChild(li);
                 } else {
-                    ongoingTasks.appendChild(li);
+                    li.classList.remove('completed');
                     editBtn.style.display = 'flex';
+                    completeBtn.title = "Complete task";
+                    completeBtn.innerHTML = '<i class="fas fa-check"></i>';
+                    ongoingTasks.appendChild(li);
                 }
-                
-                updateTaskDates(li, task);
-            }
+                if (task) updateTaskDates(li, task);
+            });
         });
         
-        // Edit task
+        // 2. Edit task
         editBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             taskText.contentEditable = true;
@@ -196,7 +199,7 @@ document.addEventListener('DOMContentLoaded', function() {
             saveBtn.style.display = 'flex';
         });
         
-        // Save edited task
+        // 3. Save edited task
         saveBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             const newText = taskText.textContent.trim();
@@ -221,18 +224,18 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        // Delete task
+        // 4. Delete task
         deleteBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             
-            // Remove from localStorage
             let tasks = getStoredTasks();
             tasks = tasks.filter(t => t.id !== taskId);
             saveStoredTasks(tasks);
 
-            // Play animation and sound
-            playBiteAnimation(li);
             playChompSound();
+            playBiteAnimation(li, () => {
+                li.remove();
+            });
         });
     }
 
@@ -248,7 +251,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const hasCompleted = tasks.some(t => t.is_completed);
 
         if (hasCompleted) {
-            // Filter out completed tasks in localStorage
             tasks = tasks.filter(t => !t.is_completed);
             saveStoredTasks(tasks);
 
@@ -256,14 +258,14 @@ document.addEventListener('DOMContentLoaded', function() {
             const items = completedTasks.querySelectorAll('li');
             items.forEach((item, index) => {
                 setTimeout(() => {
-                    playBiteAnimation(item);
+                    playBiteAnimation(item, () => item.remove());
                 }, index * 150);
             });
         }
     });
 
-    // Bite animation function
-    function playBiteAnimation(taskElement) {
+    // Bite animation helper with callback
+    function playBiteAnimation(taskElement, callback) {
         const rect = taskElement.getBoundingClientRect();
         biteAnim.style.left = `${rect.left + rect.width / 2}px`;
         biteAnim.style.top = `${rect.top + rect.height / 2}px`;
@@ -271,9 +273,9 @@ document.addEventListener('DOMContentLoaded', function() {
         biteAnim.classList.add('bite-active');
         
         setTimeout(() => {
-            taskElement.remove();
             biteAnim.classList.remove('bite-active');
-        }, 600);
+            if (callback) callback();
+        }, 500);
     }
 
     // Create floating bubbles
@@ -299,7 +301,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (e.key === 'Enter') addTask();
     });
 
-    // Add initial styling for bubbles
+    // Bubble styles
     const style = document.createElement('style');
     style.textContent = `
         .bubble {
@@ -318,6 +320,6 @@ document.addEventListener('DOMContentLoaded', function() {
     `;
     document.head.appendChild(style);
 
-    // Initial load of tasks
+    // Initial load
     loadTasks();
 });
