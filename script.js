@@ -59,8 +59,8 @@ document.addEventListener('DOMContentLoaded', function() {
     function createTaskElement(task) {
         const li = document.createElement('li');
         li.dataset.id = task.id;
+        
         li.innerHTML = `
-            <button class="complete-btn ${task.is_completed ? 'checked' : ''}">${task.is_completed ? '✓' : ''}</button>
             <div class="task-content">
                 <span class="task-text">${task.task_text}</span>
                 <div class="task-dates">
@@ -69,9 +69,14 @@ document.addEventListener('DOMContentLoaded', function() {
                       `<span class="task-date">Updated: ${formatDate(task.updated_at)}</span>` : ''}
                 </div>
             </div>
-            <button class="edit-btn"><i class="fas fa-edit"></i></button>
-            <button class="save-btn"><i class="fas fa-check"></i></button>
-            <button class="delete-btn"><i class="fas fa-times"></i></button>
+            <div class="action-buttons">
+                <button class="toggle-complete-btn" title="${task.is_completed ? 'Undo' : 'Complete'}">
+                    <i class="fas ${task.is_completed ? 'fa-undo' : 'fa-check'}"></i>
+                </button>
+                <button class="edit-btn" title="Edit"><i class="fas fa-edit"></i></button>
+                <button class="save-btn" title="Save"><i class="fas fa-save"></i></button>
+                <button class="delete-btn" title="Delete"><i class="fas fa-times"></i></button>
+            </div>
         `;
         
         if (task.is_completed) {
@@ -145,20 +150,20 @@ document.addEventListener('DOMContentLoaded', function() {
     // Set up event listeners for a task item
     function setupTaskEvents(li) {
         const taskId = li.dataset.id;
-        const completeBtn = li.querySelector('.complete-btn');
+        const toggleBtn = li.querySelector('.toggle-complete-btn');
+        const toggleIcon = toggleBtn.querySelector('i');
         const taskText = li.querySelector('.task-text');
         const editBtn = li.querySelector('.edit-btn');
         const saveBtn = li.querySelector('.save-btn');
         const deleteBtn = li.querySelector('.delete-btn');
         
-        // Task completion
-        li.addEventListener('click', (e) => {
+        // Complete / Undo Button Click Handler
+        toggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            
+            // Don't toggle state if task is currently being edited
             if (taskText.isContentEditable) return;
-            
-            if (e.target === deleteBtn || e.target.closest('.delete-btn') || 
-                e.target === editBtn || e.target.closest('.edit-btn') ||
-                e.target === saveBtn || e.target.closest('.save-btn')) return;
-            
+
             const isCompleted = !li.classList.contains('completed');
             const now = new Date().toISOString();
 
@@ -170,18 +175,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 task.updated_at = now;
                 saveStoredTasks(tasks);
 
-                // Update DOM
-                li.classList.toggle('completed');
-                completeBtn.classList.toggle('checked');
-                completeBtn.innerHTML = completeBtn.classList.contains('checked') ? '✓' : '';
+                // Update DOM state & Move lists
+                li.classList.toggle('completed', isCompleted);
                 
                 if (isCompleted) {
                     completedTasks.appendChild(li);
                     editBtn.style.display = 'none';
                     saveBtn.style.display = 'none';
+                    toggleIcon.className = 'fas fa-undo';
+                    toggleBtn.title = 'Undo';
                 } else {
                     ongoingTasks.appendChild(li);
                     editBtn.style.display = 'flex';
+                    toggleIcon.className = 'fas fa-check';
+                    toggleBtn.title = 'Complete';
                 }
                 
                 updateTaskDates(li, task);
