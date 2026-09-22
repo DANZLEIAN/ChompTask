@@ -272,6 +272,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Bite animation helper
+    // Bite animation helper
     function playBiteAnimation(taskElement, callback) {
         if (!biteAnim) {
             if (callback) callback();
@@ -279,16 +280,22 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         const rect = taskElement.getBoundingClientRect();
+        
+        // Position at the center of the targeted task card
         biteAnim.style.left = `${rect.left + rect.width / 2}px`;
         biteAnim.style.top = `${rect.top + rect.height / 2}px`;
-        biteAnim.style.display = 'block';
+        
+        // Force the browser to reset before animating
+        biteAnim.classList.remove('bite-active');
+        void biteAnim.offsetWidth; 
+        
+        // Trigger the pop-in animation
         biteAnim.classList.add('bite-active');
         
         setTimeout(() => {
             biteAnim.classList.remove('bite-active');
-            biteAnim.style.display = 'none';
             if (callback) callback();
-        }, 500);
+        }, 350);
     }
 
     // Create floating bubbles
